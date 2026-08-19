@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: deployment-engine
+  namespace: deployment-engine
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: active, port: { number: 80 } } }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: deployment-engine-canary
+  namespace: deployment-engine
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "5"
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: canary, port: { number: 80 } } }

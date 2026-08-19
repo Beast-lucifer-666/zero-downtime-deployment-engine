@@ -1,0 +1,7 @@
+{
+  "name": "zero-downtime-demo-service",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": { "start": "node src/server.js", "test": "node --test" },
+  "engines": { "node": ">=20" }
+}
