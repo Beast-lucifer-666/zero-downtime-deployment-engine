@@ -8,7 +8,7 @@ jobs:
       - run: npm test --prefix app
       - run: docker build -f docker/Dockerfile -t zero-downtime:${{ github.sha }} .
       - name: Security scan image
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.36.0
         with:
           image-ref: zero-downtime:${{ github.sha }}
           format: table
