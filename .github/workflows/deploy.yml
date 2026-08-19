@@ -8,14 +8,16 @@ jobs:
       - run: npm test --prefix app
       - run: docker build -f docker/Dockerfile -t zero-downtime:${{ github.sha }} .
       - name: Security scan image
-        uses: aquasecurity/trivy-action@0.31.0
-        with:
-          image-ref: zero-downtime:${{ github.sha }}
-          format: table
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: os,library
-          severity: CRITICAL,HIGH
+        run: |
+          if ! command -v trivy >/dev/null 2>&1; then
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+              | sudo sh -s -- -b /usr/local/bin
+          fi
+          trivy image \
+            --exit-code 1 \
+            --ignore-unfixed \
+            --severity HIGH,CRITICAL \
+            zero-downtime:${{ github.sha }}
   deploy:
     needs: verify
     if: github.ref == 'refs/heads/main'
