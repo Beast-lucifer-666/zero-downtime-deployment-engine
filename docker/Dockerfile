@@ -1,8 +1,10 @@
-FROM node:20-alpine
+FROM gcr.io/distroless/nodejs22-debian12:nonroot
+
 WORKDIR /app
-COPY app/package*.json ./
+
 COPY app/src ./src
-USER node
+
 ENV PORT=8080
 EXPOSE 8080
-CMD ["node", "src/server.js"]
+
+CMD ["src/server.js"]
