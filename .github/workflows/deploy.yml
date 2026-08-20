@@ -28,7 +28,8 @@ jobs:
         run: |
           minikube status || minikube start --driver=docker
           minikube image load zero-downtime:${{ github.sha }}
-          kubectl apply -f k8s/namespace.yaml -f k8s/blue-green/rollout.yaml -f k8s/services/active-service.yaml -f k8s/services/preview-service.yaml
+          kubectl apply -f k8s/namespace.yaml -f k8s/blue-green/rollout.yaml -f k8s/services/preview-service.yaml
+          kubectl -n deployment-engine get service active >/dev/null 2>&1 || kubectl apply -f k8s/services/active-service.yaml
           kubectl apply -f k8s/monitoring.yaml
       - name: Deploy inactive color
         run: |
