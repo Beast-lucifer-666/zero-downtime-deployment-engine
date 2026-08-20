@@ -20,7 +20,21 @@ http.createServer((req, res) => {
   const match = req.url.match(/^\/switch\/(blue|green)$/);
   if (req.method === 'POST' && match) {
     const color = match[1]; const patch = `{"spec":{"selector":{"app":"deployment-engine","color":"${color}"}}}`;
-    return kubectl(['patch','service','active','--type=merge','-p',patch], (e) => { res.writeHead(e ? 500 : 200); res.end(e ? 'Switch failed: '+e.message : `Traffic switched to ${color === 'green' ? 'v2' : 'v1'}`); });
+    return kubectl(['patch', 'service', 'active', '--type=merge', '-p', patch], (e) => {
+  if (e) {
+    res.writeHead(500);
+    return res.end('Switch failed: ' + e.message);
+  }
+
+  execFile('sudo', ['systemctl', 'restart', 'deployment-active'], (restartError) => {
+    res.writeHead(restartError ? 500 : 200);
+    res.end(
+      restartError
+        ? 'Traffic switched, but port refresh failed: ' + restartError.message
+        : `Traffic switched to ${color === 'green' ? 'v2' : 'v1'}`
+    );
+  });
+});
   }
   res.writeHead(404); res.end('not found');
 }).listen(process.env.CONTROL_PORT || 8081, '0.0.0.0', () => console.log('control panel on port 8081'));
