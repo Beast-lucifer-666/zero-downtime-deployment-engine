@@ -5,5 +5,5 @@ ACTIVE="$(kubectl -n deployment-engine get service active -o jsonpath='{.spec.se
 TARGET=green
 [[ "$ACTIVE" == green ]] && TARGET=blue
 kubectl -n deployment-engine set image deployment/$TARGET app="$IMAGE"
-kubectl -n deployment-engine rollout status deployment/$TARGET --timeout=180s
+kubectl -n deployment-engine rollout status deployment/$TARGET --timeout=180s >/dev/null
 echo "$TARGET"
