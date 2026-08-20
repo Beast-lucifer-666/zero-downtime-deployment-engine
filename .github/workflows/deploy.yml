@@ -36,13 +36,11 @@ jobs:
           echo "TARGET=$TARGET" >> "$GITHUB_ENV"
       - name: Smoke test inactive color
         run: |
-          SERVICE=preview
-          [[ "$TARGET" == blue ]] && SERVICE=active
-          kubectl -n deployment-engine port-forward service/$SERVICE 18082:80 > /tmp/preview.log 2>&1 &
+          kubectl -n deployment-engine port-forward deployment/$TARGET 18082:8080 > /tmp/preview.log 2>&1 &
           PF=$!
           trap 'kill $PF 2>/dev/null || true' EXIT
-          sleep 3
-          curl --fail --retry 5 http://127.0.0.1:18082/health
+          sleep 5
+          curl --fail --retry 10 --retry-delay 1 http://127.0.0.1:18082/health
       - name: Promote inactive color
         run: bash ./scripts/promote.sh "$TARGET"
       - name: Automatic rollback on failure
