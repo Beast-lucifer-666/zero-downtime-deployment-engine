@@ -44,7 +44,7 @@ jobs:
           sleep 3
           curl --fail --retry 5 http://127.0.0.1:18082/health
       - name: Promote inactive color
-        run: ./scripts/promote.sh "$TARGET"
+        run: bash ./scripts/promote.sh "$TARGET"
       - name: Automatic rollback on failure
         if: failure()
-        run: ./scripts/rollback.sh
+        run: bash ./scripts/rollback.sh
