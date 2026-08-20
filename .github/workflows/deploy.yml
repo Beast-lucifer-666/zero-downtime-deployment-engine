@@ -6,16 +6,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: npm test --prefix app
-      - run: docker build -f docker/Dockerfile -t zero-downtime:${{ github.sha }} .
+      - run: docker build --no-cache -f docker/Dockerfile -t zero-downtime:${{ github.sha }} .
       - name: Security scan image
-        uses: aquasecurity/trivy-action@v0.31.0
-        with:
-          image-ref: zero-downtime:${{ github.sha }}
-          format: table
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: os,library
-          severity: CRITICAL,HIGH
+        run: |
+          if ! command -v trivy >/dev/null 2>&1; then
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+          fi
+          trivy image --exit-code 1 --ignore-unfixed --severity HIGH,CRITICAL zero-downtime:${{ github.sha }}
   deploy:
     needs: verify
     if: github.ref == 'refs/heads/main'
@@ -28,19 +25,21 @@ jobs:
           minikube image load zero-downtime:${{ github.sha }}
           kubectl apply -f k8s/namespace.yaml -f k8s/blue-green/rollout.yaml -f k8s/services/active-service.yaml -f k8s/services/preview-service.yaml
           kubectl apply -f k8s/monitoring.yaml
-      - name: Deploy green
+      - name: Deploy inactive color
         run: |
-          kubectl -n deployment-engine set image deployment/green app=zero-downtime:${{ github.sha }}
-          kubectl -n deployment-engine rollout status deployment/green --timeout=180s
-      - name: Smoke test green
+          TARGET=$(./scripts/deploy-inactive.sh zero-downtime:${{ github.sha }})
+          echo "TARGET=$TARGET" >> "$GITHUB_ENV"
+      - name: Smoke test inactive color
         run: |
-          kubectl -n deployment-engine port-forward service/preview 18082:80 > /tmp/preview.log 2>&1 &
+          SERVICE=preview
+          [[ "$TARGET" == blue ]] && SERVICE=active
+          kubectl -n deployment-engine port-forward service/$SERVICE 18082:80 > /tmp/preview.log 2>&1 &
           PF=$!
           trap 'kill $PF 2>/dev/null || true' EXIT
           sleep 3
           curl --fail --retry 5 http://127.0.0.1:18082/health
-      - name: Promote green
-        run: ./scripts/promote.sh green
+      - name: Promote inactive color
+        run: ./scripts/promote.sh "$TARGET"
       - name: Automatic rollback on failure
         if: failure()
         run: ./scripts/rollback.sh
