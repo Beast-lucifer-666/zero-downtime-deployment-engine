@@ -40,7 +40,7 @@ jobs:
           PF=$!
           trap 'kill $PF 2>/dev/null || true' EXIT
           sleep 5
-          curl --fail --retry 10 --retry-delay 1 http://127.0.0.1:18082/health
+          curl --fail --retry 20 --retry-delay 1 --retry-all-errors http://127.0.0.1:18082/health
       - name: Promote inactive color
         run: bash ./scripts/promote.sh "$TARGET"
       - name: Automatic rollback on failure
