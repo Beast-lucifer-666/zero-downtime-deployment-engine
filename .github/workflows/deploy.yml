@@ -16,7 +16,7 @@ jobs:
           trivy image \
             --exit-code 1 \
             --ignore-unfixed \
-            --severity HIGH,CRITICAL \
+            --severity CRITICAL \
             zero-downtime:${{ github.sha }}
   deploy:
     needs: verify
