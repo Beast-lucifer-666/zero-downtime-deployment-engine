@@ -6,7 +6,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: npm test --prefix app
-      - run: docker build -f docker/Dockerfile -t zero-downtime:${{ github.sha }} .
+      - run: docker build --no-cache -f docker/Dockerfile -t zero-downtime:${{ github.sha }} .
       - name: Security scan image
         run: |
           if ! command -v trivy >/dev/null 2>&1; then
